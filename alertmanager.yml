@@ -1,0 +1,52 @@
+#Ansible Playbook for Alertmanager deployemnt
+#Author Name: Riya Sapkale
+#Alertmanager tar should be present on your ansible master machine
+---
+- hosts: all
+  tasks:
+
+   - name: create a alertmanager user
+     user:
+       name: alertmanager
+       shell: /bin/bash
+       create_home: true
+       state: present
+     become: yes 
+
+   - name: Download given alertmanager 
+     ansible.builtin.copy:
+       src: "/home/infosec/alertmanager-0.23.0.linux-amd64.tar.gz"
+       dest: "/tmp/"
+
+   - name: unarchive given alertmanager
+     unarchive:
+       src: /tmp/alertmanager-0.23.0.linux-amd64.tar.gz
+       dest: /opt/
+       owner: alertmanager
+       group: alertmanager
+       remote_src: yes
+     become: yes
+
+   - name: Create symlink for alertmanager
+     file:
+       src: /opt/alertmanager-0.23.0.linux-amd64
+       dest: /opt/alertmanager
+       state: link
+       owner: alertmanager
+       group: alertmanager
+       #mode: 0777 
+     become: yes
+
+   
+   - name: Start alertmanager
+     shell: "nohup /opt/alertmanager/alertmanager --config.file=/opt/alertmanager/alertmanager.yml  >/dev/null 2>&1 &"
+     args:
+      chdir: "/opt/alertmanager"
+     become: yes
+     become_user: alertmanager
+     register: start_out
+
+   - debug:
+      msg: "{{ start_out }}"
+...
+

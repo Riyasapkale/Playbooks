@@ -1,0 +1,61 @@
+#Ansible Playbook for Prometheus deployemnt
+#Author Name: Riya Sapkale
+#Prometheus tar should be present on your ansible master machine
+---
+- hosts: all
+  tasks:
+
+   - name: create a prometheus user
+     user:
+       name: prometheus
+       shell: /bin/bash
+       create_home: true
+       state: present
+     become: yes 
+
+   - name: Download given prometheus
+     ansible.builtin.copy:
+       src: "/home/infosec/prometheus-2.33.0-rc.0.linux-amd64.tar.gz"
+       dest: "/tmp/"
+
+   - name: unarchive given prometheus
+     unarchive:
+       src: /tmp/prometheus-2.33.0-rc.0.linux-amd64.tar.gz
+       dest: /opt/
+       owner: prometheus
+       group: prometheus
+       remote_src: yes
+     become: yes
+
+   - name: Create symlink for prometheus
+     file:
+       src: /opt/prometheus-2.33.0-rc.0.linux-amd64
+       dest: /opt/prometheus
+       state: link
+       owner: prometheus
+       group: prometheus
+       #mode: 0777 
+     become: yes
+   
+   - name: create a prometheus directory
+     file:
+       path: "/data/prometheus/"
+       state: "directory"
+       mode: "0755"
+       owner: prometheus
+       group: prometheus
+     become: yes
+
+   
+   - name: Start prometheus
+     shell: "nohup /opt/prometheus/prometheus --config.file=/opt/prometheus/prometheus.yml --storage.tsdb.path=/data/prometheus --storage.tsdb.retention.time=30d >/dev/null 2>&1 &"
+     args:
+      chdir: "/opt/prometheus"
+     become: yes
+     become_user: prometheus
+     register: start_out
+
+   - debug:
+      msg: "{{ start_out }}"
+...
+
