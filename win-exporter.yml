@@ -1,0 +1,24 @@
+# This is ansible script to deploy window exporter agent in window Machine
+# Author: Riya Sapkale
+# We require window exporter exe in our ansible master machine
+---
+- hosts: window
+  tasks: 
+
+  - name: installing window exporter
+    win_copy:
+      src: /home/infosec/windows_exporter-0.15.0-amd64.msi 
+      dest: C:\
+   
+  - name: install exporter
+    win_package:
+      path: C:\windows_exporter-0.15.0-amd64.msi
+      state: present
+  
+  - name: start ervice
+    win_service:
+      name: windows_exporter
+      state: started
+... 
+    
+        

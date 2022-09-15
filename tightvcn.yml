@@ -1,0 +1,39 @@
+# This is ansible script for to deploy tight vnc agent in window Machine
+# Author: Riya Sapkale
+# We Require Tight VNC exe in our Ansible Master Machine
+---
+- hosts: window
+  become: false
+  vars:
+    source: /home/infosec/tightvnc-2.8.63-gpl-setup-64bit.msi
+    destination: D:\
+  tasks:
+  
+   - name: check tightvnc is present or not on server
+     win_stat:
+       path: D:\tightvnc-2.8.63-gpl-setup-64bit.msi
+       get_checksum: yes
+     register: file_info
+   
+   - debug: 
+       var: file_info
+     
+     #when: file_info.stat.exists         
+
+   - name: copy tight setup
+     win_copy:
+       src: "{{ source }}"
+       dest: "{{ destination }}"
+     when: not file_info.stat.exists
+   
+   - name: install tightvnc
+     win_package:
+       path: D:\tightvnc-2.8.63-gpl-setup-64bit.msi
+       state: present
+  
+   - name: start service
+     win_service:
+       name: tightvnc
+... 
+    
+        

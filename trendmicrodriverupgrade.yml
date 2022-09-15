@@ -1,0 +1,53 @@
+# Ansible playbook for trendmicro driver upgradation into version 2.8.9042 on window servers 
+# Author: Riya Sapkale
+# Latest trendmicro driver build should be present on your ansible master machine
+---
+- hosts: window
+  tasks:
+
+  - name: stop ds agent
+    win_command: sc stop ds_agent
+
+  - name: stop amsp agent
+    win_command: sc stop amsp
+
+  - name: stop tmumh agent
+    win_command: sc stop tmumh
+
+  - name: check tmumh driver status is stop
+    win_command: sc query tmumh
+    register: status
+
+  - debug:
+     var: status
+
+  - name: Rename the tmumh.sys driver
+    win_shell: Rename-Item -Path "tmumh.sys" -NewName "tmumh.sys_original"
+    args:
+      chdir: C:\windows\system32\drivers
+
+  - name: upload the latest version of trend micro driver
+    win_copy:
+     src: /home/centos/Riya/tmumh.sys
+     dest: C:\windows\system32\drivers\
+ 
+  - name: start tmumh agent
+    win_command: sc start tmumh
+
+  - name: check tmumh driver status is running or not
+    win_command: sc query tmumh
+    register: status_tmumh
+
+  - debug: 
+     var: status_tmumh
+
+  - name: start ds agent
+    win_command: sc start ds_agent
+
+  - name: start amsp agent
+    win_command: sc start amsp
+
+
+   
+...
+
